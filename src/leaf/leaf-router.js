@@ -3,7 +3,7 @@ const uuid = require('uuid/v4')
 const { isWebUri } = require('valid-url')
 const logger = require('../logger')
 const store = require('../store')
-const LeafService = require('./Leaf-service')
+const LeafService = require('./leaf-service')
 
 const LeafRouter = express.Router()
 const bodyParser = express.json()

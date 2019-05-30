@@ -26,4 +26,4 @@ const LeafService = {
     },
   }
   
-  module.exports = leafService
+  module.exports = LeafService

@@ -24,6 +24,13 @@ const serializeUser = (user, token) => ({
   token:token
 })
 
+const serializeShop = shop => ({
+  name: shop.name,
+  telephone: shop.telephone,
+  statecode: shop.statecode,
+  zip:shop.zip
+})
+
 LeafRouter
   .route('/login')
   .post(bodyParser, (req, res) => {
@@ -79,8 +86,12 @@ LeafRouter
   .route('/claim')
   .post(bodyParser, (req, res) => {
     const { user, id } = req.body;
-    console.log(user);
-    AuthService.claimShop(req.app.get('db'), user, id);
+        console.log(user.id, id)
+      AuthService.claimShop(req.app.get('db'), user.id, id).then(shop => {
+  
+      res.json(shop)
+
+    });
 
 
   });
@@ -123,20 +134,36 @@ LeafRouter
   })
 
 LeafRouter
-  .route('/Leaf/:leaf_id')
+  .route('/shop/:id')
   .get((req, res, next) => {
-    const { leaf_id } = req.params
-    LeafService.getById(req.app.get('db'), leaf_id)
-      .then(leaf => {
-        if (!leaf) {
-          logger.error(`leaf with id ${leaf_id} not found.`)
+    const { id } = req.params
+    LeafService.getById(req.app.get('db'), id)
+      .then(shop => {
+        if (!shop) {
+          logger.error(`shop with id ${leaf_id} not found.`)
           return res.status(404).json({
-            error: { message: `leaf Not Found` }
+            error: { message: `shop Not Found` }
           })
         }
-        res.json(serializeleaf(leaf))
+        res.json(shop)
       })
       .catch(next)
+  })
+  .patch(bodyParser, (req, res) => {
+    // TODO: update to use db
+    const { id } = req.params
+    const { name, telephone, statecode, zip } = req.body
+    const shop = { name, telephone, statecode, zip }
+
+
+    LeafService.updateShop(req.app.get('db'), id, serializeShop(shop)).then(shop => {
+  
+      res.json(shop)
+
+    });
+
+
+
   })
   .delete((req, res) => {
     // TODO: update to use db

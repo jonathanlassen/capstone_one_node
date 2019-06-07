@@ -34,9 +34,11 @@ const Authservice = {
     },
 
     claimShop(knex, userid, id) {
-      return knex('user')
-        .where({ id })
-        .update({shop_id: id})
+
+
+      return knex('users')
+        .where({ id: userid })
+        .update({ shop_id: id })
     },
 
     deleteLeaf(knex, id) {
@@ -50,5 +52,5 @@ const Authservice = {
         .update(newLeafFields)
     },
   }
-  
+
   module.exports = Authservice

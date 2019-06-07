@@ -19,10 +19,12 @@ const LeafService = {
         .where({ id })
         .delete()
     },
-    updateLeaf(knex, id, newLeafFields) {
-      return knex('leaf')
-        .where({ id })
-        .update(newLeafFields)
+    updateShop(knex, id, shop) {
+      console.log(shop)
+
+      return knex('shops')
+        .where({ id: id })
+        .update( shop )
     },
   }
   

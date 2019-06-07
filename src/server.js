@@ -7,6 +7,23 @@ const db = knex({
   connection: DB_URL,
 })
 
+
+/* const shops = require('./shops')
+
+
+shops.features.map(shop => {
+  db.insert({
+    name: shop.properties.Name,
+    lat: shop.geometry.coordinates[1],
+    long: shop.geometry.coordinates[0],
+  })
+  .into('shops')
+  .returning('*')
+  .then();
+}); */
+
+
+
 app.set('db', db)
 
 app.listen(PORT, () => {

@@ -6,10 +6,7 @@
   "scripts": {
     "test": "mocha --require test/setup.js --watch",
     "dev": "nodemon src/server.js",
-    "start": "node src/server.js",
-    "predeploy": "npm audit",
-    "deploy": "git push heroku master",
-    "migrate": "postgrator --config postgrator-config.js"
+    "start": "node src/server.js"
   },
   "keywords": [],
   "license": "MIT",
@@ -24,7 +21,9 @@
     "postgrator-cli": "^3.1.0",
     "valid-url": "^1.0.9",
     "winston": "^3.2.1",
-    "xss": "^1.0.3"
+    "xss": "^1.0.3",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^8.5.0"
   },
   "devDependencies": {
     "chai": "^4.2.0",

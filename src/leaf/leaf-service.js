@@ -1,9 +1,9 @@
 const LeafService = {
     getAllLeaf(knex) {
-      return knex.select('*').from('leaf')
+      return knex.select('*').from('shops')
     },
     getById(knex, id) {
-      return knex.from('leaf').select('*').where('id', id).first()
+      return knex.from('shops').select('*').where('id', id).first()
     },
     insertLeaf(knex, newLeaf) {
       return knex

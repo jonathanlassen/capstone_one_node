@@ -4,17 +4,88 @@ const { isWebUri } = require('valid-url')
 const logger = require('../logger')
 const store = require('../store')
 const LeafService = require('./leaf-service')
-
-const LeafRouter = express.Router()
+const AuthService = require('./auth-service')
+const bcrypt = require('bcryptjs')
+const LeafRouter = express.Router();
 const bodyParser = express.json()
+const { requireAuth } = require('./jwt-auth')
 
 const serializeLeaf = leaf => ({
   id: leaf.id,
-  title: leaf.title,
-  url: leaf.url,
-  description: leaf.description,
-  rating: Number(leaf.rating),
+  title: leaf.name,
+  lat: leaf.lat,
+  long: leaf.long,
 })
+
+const serializeUser = (user, token) => ({
+  id: user.id,
+  username: user.username,
+  email: user.email,
+  token:token
+})
+
+LeafRouter
+  .route('/login')
+  .post(bodyParser, (req, res) => {
+    // TODO: update to use db
+    for (const field of ['password', 'username']) {
+      if (!req.body[field]) {
+        logger.error(`${field} is required`)
+        return res.status(400).send(`'${field}' is required`)
+      }
+    }
+
+    const { username, password } = req.body;
+
+    AuthService.getUserWithUserName(req.app.get('db'), username).then(user => {
+      if (!user) {
+        return res.status(401).json({ error: 'Unauthorized request1' })
+      }
+
+      return bcrypt.compare(password, user.password)
+            .then(passwordsMatch => {
+              if (!passwordsMatch) {
+                return res.status(401).json({ error: 'Unauthorized request2' })
+              }
+              const sub = user.username
+              const payload = { id: user.id }
+              const token = AuthService.createJwt(sub, payload);
+              res.json(serializeUser(user, token))
+            });
+    });
+  });
+
+LeafRouter
+  .route('/register')
+  .post(bodyParser, (req, res) => {
+    // TODO: update to use db
+    for (const field of ['password', 'username']) {
+      if (!req.body[field]) {
+        logger.error(`${field} is required`)
+        return res.status(400).send(`'${field}' is required`)
+      }
+    }
+    // check for existing email/username
+  
+    const { username, password, email } = req.body;
+    bcrypt.hash(password, 12).then(hash => {
+        const user = { username, password:hash, email};
+        AuthService.insertUser(req.app.get('db'), user);
+    }
+    );
+  });
+
+  LeafRouter
+  .route('/claim')
+  .post(bodyParser, (req, res) => {
+    const { user, id } = req.body;
+    console.log(user);
+    AuthService.claimShop(req.app.get('db'), user, id);
+
+
+  });
+
+
 
 LeafRouter
   .route('/Leaf')
@@ -34,11 +105,6 @@ LeafRouter
       }
     }
     const { title, url, description, rating } = req.body
-
-    if (!Number.isInteger(rating) || rating < 0 || rating > 5) {
-      logger.error(`Invalid rating '${rating}' supplied`)
-      return res.status(400).send(`'rating' must be a number between 0 and 5`)
-    }
 
     if (!isWebUri(url)) {
       logger.error(`Invalid url '${url}' supplied`)

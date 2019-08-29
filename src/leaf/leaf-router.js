@@ -17,7 +17,12 @@ const serializeLeaf = leaf => ({
   title: leaf.name,
   lat: leaf.lat,
   long: leaf.long,
-  zip: leaf.zip
+  zip: leaf.zip,
+  address: leaf.address,
+  telephone: leaf.telephone,
+  owned: leaf.owned,
+  owner_id: leaf.owner_id,
+  description: leaf.description
 });
 
 const serializeUser = (user, token) => ({
@@ -36,7 +41,8 @@ const serializeShop = shop => ({
   url: shop.url,
   owned: shop.owned,
   owner_id: shop.owner_id,
-  description: shop.description
+  description: shop.description,
+  statecode: shop.statecode
 });
 
 LeafRouter
@@ -126,21 +132,23 @@ LeafRouter
 
 LeafRouter
   .route('/api/claim').post(bodyParser, (req, res) => {
-    let { id, name, telephone, url, zip, address, user, description } = req.body;
+    let { id, name, telephone, url, zip, address, user, description, statecode, city } = req.body;
     AuthService.claimShop(req.app.get('db'), user.id, id).then(claimedshop => {
       name = xss(name);
       telephone= xss(telephone);
       url= xss(url);
       zip= xss(zip);
+      statecode= xss(statecode);
+      city= xss(city);
       address = xss(address);
       description = xss(description);
       const owner_id = user.id;
       const owned = 1;
-      const shop = { id, name, telephone, url, zip, address, owned, owner_id };
+      const shop = { id, name, telephone, url, zip, address, owned, owner_id, description, statecode, city };
 
       LeafService.updateShop(req.app.get('db'), id, serializeShop(shop)).then(shop => {
         AuthService.getUserWithUserName(req.app.get('db'), user.username).then(updatedUser => {
-          console.log(updatedUser);
+
           const sub = updatedUser.username;
           const payload = { id: updatedUser.id, shop_id: updatedUser.shop_id };
           const token = AuthService.createJwt(sub, payload);
@@ -149,6 +157,32 @@ LeafRouter
       });
     });
   });
+
+
+
+
+LeafRouter
+  .route('/api/shop/')
+  .patch(bodyParser, (req, res) => {
+    let { id, name, telephone, url, zip, address, user, description, statecode, city } = req.body;
+    name = xss(name);
+    telephone= xss(telephone);
+    url= xss(url);
+    zip= xss(zip);
+    statecode= xss(statecode);
+    city= xss(city);
+    address = xss(address);
+    description = xss(description);
+    const owner_id = user.id;
+    const owned = 1;
+    const shop = { id, name, telephone, url, zip, address, owned, owner_id, description, statecode, city };
+   
+    LeafService.updateShop(req.app.get('db'), id, serializeShop(shop)).then(returned => {
+      res.status(201).json('1');
+    });
+
+  });
+
 
 LeafRouter
   .route('/shop/:id')

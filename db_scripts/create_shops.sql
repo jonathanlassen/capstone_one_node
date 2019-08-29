@@ -12,6 +12,7 @@ CREATE TABLE shops (
     zip TEXT,
     owned INTEGER DEFAULT 0,
     owner_id INTEGER,
-    description TEXT
+    description TEXT,
+    city TEXT
 );
 

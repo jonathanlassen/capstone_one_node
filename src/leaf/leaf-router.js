@@ -10,6 +10,7 @@ const bcrypt = require('bcryptjs');
 const LeafRouter = express.Router();
 const bodyParser = express.json();
 const { requireAuth } = require('./jwt-auth');
+const xss = require('xss');
 
 const serializeLeaf = leaf => ({
   id: leaf.id,
@@ -29,13 +30,14 @@ const serializeUser = (user, token) => ({
 
 const serializeShop = shop => ({
   name: shop.name,
+  address: shop.address,
   telephone: shop.telephone,
-  statecode: shop.statecode,
-  zip:shop.zip
+  zip:shop.zip,
+  url: shop.url
 });
 
 LeafRouter
-  .route('/login')
+  .route('/api/login')
   .post(bodyParser, (req, res) => {
     // TODO: update to use db
     for (const field of ['password', 'username']) {
@@ -50,7 +52,6 @@ LeafRouter
       if (!user) {
         return res.status(401).json({ error: 'Unauthorized request1' });
       }
-
       return bcrypt.compare(password, user.password)
         .then(passwordsMatch => {
           if (!passwordsMatch) {
@@ -65,33 +66,27 @@ LeafRouter
   });
 
 LeafRouter
-  .route('/register')
+  .route('/api/register')
   .post(bodyParser, (req, res) => {
     // TODO: update to use db
-    for (const field of ['password', 'username']) {
+    for (const field of ['password', 'username', 'email']) {
       if (!req.body[field]) {
         logger.error(`${field} is required`);
         return res.status(400).send(`'${field}' is required`);
       }
     }
-    // check for existing email/username
-  
     const { username, password, email } = req.body;
+    AuthService.findDuplicateUsers(req.app.get('db'), username, email)
+      .then(user => {
+        if (user)
+          return res.status(400).send(`'username or email is taken`);
+      });
+
     bcrypt.hash(password, 12).then(hash => {
       const user = { username, password:hash, email};
       AuthService.insertUser(req.app.get('db'), user);
     }
     );
-  });
-
-LeafRouter
-  .route('/claim')
-  .post(bodyParser, (req, res) => {
-    const { user, id } = req.body;
-    console.log(user.id, id);
-    AuthService.claimShop(req.app.get('db'), user.id, id).then(shop => {
-      res.json(shop);
-    });
   });
 
 LeafRouter
@@ -119,10 +114,36 @@ LeafRouter
     const leaf = { id: uuid(), title, url, description, rating };
     store.Leaf.push(leaf);
     logger.info(`Leaf with id ${leaf.id} created`);
+
     res
       .status(201)
       .location(`http://localhost:8000/Leaf/${leaf.id}`)
       .json(leaf);
+  });
+
+
+LeafRouter
+  .route('/api/claim').post(bodyParser, (req, res) => {
+    let { id, name, telephone, url, zip, address, user } = req.body;
+    AuthService.claimShop(req.app.get('db'), user.id, id).then(claimedshop => {
+      name = xss(name);
+      telephone= xss(telephone);
+      url= xss(url);
+      zip= xss(zip);
+      address = xss(address);
+      const owner_id = xss(user.id);
+      const owned = '1';
+      const shop = { id, name, telephone, url, zip, address, owner_id, owned };
+
+      LeafService.updateShop(req.app.get('db'), id, serializeShop(shop)).then(shop => {
+        AuthService.getUserWithUserName(req.app.get('db'), user.username).then(updatedUser => {
+          const sub = updatedUser.username;
+          const payload = { id: updatedUser.id, shop_id: updatedUser.shop_id };
+          const token = AuthService.createJwt(sub, payload);
+          res.json(serializeUser(updatedUser, token));
+        });
+      });
+    });
   });
 
 LeafRouter
@@ -144,8 +165,9 @@ LeafRouter
   .patch(bodyParser, (req, res) => {
     // TODO: update to use db
     const { id } = req.params;
-    const { name, telephone, statecode, zip } = req.body;
-    const shop = { name, telephone, statecode, zip };
+    const { name, telephone, url, zip, address } = req.body;
+    const shop = { name, telephone, url, zip, address };
+   
     LeafService.updateShop(req.app.get('db'), id, serializeShop(shop)).then(shop => {
       res.json(shop);
     });

@@ -21,4 +21,4 @@ app.get('/', (req, res) => {
 })
 
 app.use(errorHandler)
-module.exports = app
+module.exports = app;

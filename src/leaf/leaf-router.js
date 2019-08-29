@@ -33,7 +33,10 @@ const serializeShop = shop => ({
   address: shop.address,
   telephone: shop.telephone,
   zip:shop.zip,
-  url: shop.url
+  url: shop.url,
+  owned: shop.owned,
+  owner_id: shop.owner_id,
+  description: shop.description
 });
 
 LeafRouter
@@ -121,22 +124,23 @@ LeafRouter
       .json(leaf);
   });
 
-
 LeafRouter
   .route('/api/claim').post(bodyParser, (req, res) => {
-    let { id, name, telephone, url, zip, address, user } = req.body;
+    let { id, name, telephone, url, zip, address, user, description } = req.body;
     AuthService.claimShop(req.app.get('db'), user.id, id).then(claimedshop => {
       name = xss(name);
       telephone= xss(telephone);
       url= xss(url);
       zip= xss(zip);
       address = xss(address);
-      const owner_id = xss(user.id);
-      const owned = '1';
-      const shop = { id, name, telephone, url, zip, address, owner_id, owned };
+      description = xss(description);
+      const owner_id = user.id;
+      const owned = 1;
+      const shop = { id, name, telephone, url, zip, address, owned, owner_id };
 
       LeafService.updateShop(req.app.get('db'), id, serializeShop(shop)).then(shop => {
         AuthService.getUserWithUserName(req.app.get('db'), user.username).then(updatedUser => {
+          console.log(updatedUser);
           const sub = updatedUser.username;
           const payload = { id: updatedUser.id, shop_id: updatedUser.shop_id };
           const token = AuthService.createJwt(sub, payload);

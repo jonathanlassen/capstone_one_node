@@ -11,6 +11,7 @@ CREATE TABLE shops (
     url TEXT,
     zip TEXT,
     owned INTEGER DEFAULT 0,
-    owner_id INTEGER
+    owner_id INTEGER,
+    description TEXT
 );
 

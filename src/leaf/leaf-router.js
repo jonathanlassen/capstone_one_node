@@ -42,7 +42,8 @@ const serializeShop = shop => ({
   owned: shop.owned,
   owner_id: shop.owner_id,
   description: shop.description,
-  statecode: shop.statecode
+  statecode: shop.statecode,
+  city: shop.city
 });
 
 LeafRouter
@@ -108,7 +109,6 @@ LeafRouter
       .catch(next);
   })
   .post(bodyParser, (req, res) => {
-    // TODO: update to use db
     for (const field of ['title', 'url', 'rating']) {
       if (!req.body[field]) {
         logger.error(`${field} is required`);

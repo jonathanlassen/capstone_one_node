@@ -22,7 +22,9 @@ const serializeLeaf = leaf => ({
   telephone: leaf.telephone,
   owned: leaf.owned,
   owner_id: leaf.owner_id,
-  description: leaf.description
+  description: leaf.description,
+  statecode: leaf.statecode,
+  city: leaf.city
 });
 
 const serializeUser = (user, token) => ({

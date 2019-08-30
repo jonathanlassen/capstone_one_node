@@ -8,17 +8,21 @@ const { NODE_ENV } = require('./config')
 const validateBearerToken = require('./validate-bearer-token')
 const errorHandler = require('./error-handler')
 const LeafRouter = require('./leaf/leaf-router')
-const app = express()
+const app = express();
+
+
 app.use(morgan((NODE_ENV === 'production') ? 'tiny' : 'common', {
   skip: () => NODE_ENV === 'test'
-}))
+}));
 app.use(cors())
 app.use(helmet())
 app.use(validateBearerToken)
 app.use(LeafRouter)
+
+
 app.get('/', (req, res) => {
-  res.send('Hello, world!')
-})
+  return res.status(404).send('Not found');
+});
 
 app.use(errorHandler)
 module.exports = app;

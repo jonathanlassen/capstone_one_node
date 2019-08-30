@@ -8,7 +8,7 @@ const db = knex({
 })
 
 
-/* const shops = require('./shops')
+const shops = require('./shops')
 
 
 shops.features.map(shop => {
@@ -20,7 +20,7 @@ shops.features.map(shop => {
   .into('shops')
   .returning('*')
   .then();
-}); */
+});
 
 
 

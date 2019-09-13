@@ -94,6 +94,8 @@ LeafRouter.route('/api/register').post(bodyParser, (req, res) => {
     const user = { username, password: hash, email };
     AuthService.insertUser(req.app.get('db'), user);
   });
+
+  res.status(201).json({ message: 'Successfully Registered' });
 });
 
 LeafRouter.route('/Leaf')
